@@ -166,6 +166,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error) {
                 console.error('Error generating QR code:', error);
             }
+        fetch('https://lsmac-log-in.onrender.com/generate_qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ member_id: memberId })
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            var qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = '';
+            var img = document.createElement('img');
+            img.src = URL.createObjectURL(blob);
+            img.alt = 'QR Code';
+            img.style.width = '200px';
+            img.style.height = '200px';
+            qrContainer.appendChild(img);
+        })
+        .catch(error => {
+            console.error('Error generating QR code:', error);
         });
     }
 
@@ -295,16 +313,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const members = await fetchAllMembers();
             
             // Create CSV header
-            const csvHeader = 'Member ID,Name,Email,Phone,Member Since,Checked In Today,Classes Today\n';
+            const csvHeader = 'Member ID,Name,Email,Phone,Member Since,Classes,Last Check-in\n';
             
             // Create CSV rows
             const csvRows = members.map(member => {
-                const checkedInToday = member.checked_in ? 'Yes' : 'No';
-                const classesToday = member.classes || 0;
-                return `"${member.member_id}","${member.name}","${member.email || ''}","${member.phone || ''}","${member.member_since || ''}","${checkedInToday}","${classesToday}"`;
+                return `"${member.member_id}","${member.name || ''}","${member.email || ''}","${member.phone || ''}","${member.member_since || ''}","${member.classes || 0}","${member.last_checkin || ''}"`;
             }).join('\n');
             
+            // Combine header and rows
             const csvContent = csvHeader + csvRows;
+            
+            // Create and download CSV file
             const dataBlob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
