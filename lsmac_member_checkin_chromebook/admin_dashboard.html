@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMAC Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #181A1B;
+            color: #fff;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            background: #23272A;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            border-left: 4px solid #FF4136;
+        }
+
+        .header {
+            background: #181A1B;
+            color: #fff;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #0074D9;
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #FF4136;
+            display: inline-block;
+        }
+
+        .header p {
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .header-left h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            font-weight: 300;
+        }
+
+        .header-left p {
+            opacity: 0.9;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .controls-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .control-panel h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #0074D9;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #005fa3;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #23272A;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-danger {
+            background: #FF4136;
+            color: #fff;
+            border: 2px solid #FF4136;
+        }
+        .btn-danger:hover {
+            background: #b82a1c;
+            border-color: #FF4136;
+        }
+
+        .data-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .data-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .checkin-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .checkin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .checkin-item:last-child {
+            border-bottom: none;
+        }
+
+        .checkin-info {
+            flex: 1;
+        }
+
+        .checkin-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .checkin-details {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .checkin-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .status {
+            background: #23272A;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        @media (max-width: 768px) {
+            .controls-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Admin Dashboard</h1>
+                <p>LSMAC Check-In System Management</p>
+            </div>
+            <div class="header-right">
+                <span>Welcome, <span id="adminName">Admin</span></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="controls-section">
+                <div class="control-panel">
+                    <h3>Date Selection & Check-ins</h3>
+                    <div class="form-group">
+                        <label for="dateSelect">Select Date:</label>
+                        <input type="date" id="dateSelect" onchange="loadCheckinsForDate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="memberSelect">Manual Check-in:</label>
+                        <select id="memberSelect">
+                            <option value="">Select a member...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" onclick="manualCheckin()">Check In Member</button>
+                    <div id="manualCheckinStatus" class="status" style="display: none;"></div>
+                </div>
+
+                <div class="control-panel">
+                    <h3>Member Management</h3>
+                    <button class="btn btn-warning" id="viewAllMembersBtn">View All Members</button>
+                    <button class="btn btn-success" id="exportDataBtn">Export Data</button>
+                    <div id="memberStatus" class="status" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <h3>Check-ins for <span id="selectedDate">Today</span></h3>
+                <div id="checkinList" class="checkin-list">
+                    <p style="text-align: center; color: #6c757d; padding: 20px;">No check-ins for selected date</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Members Modal -->
+    <div id="viewMembersModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeViewMembersModalBtn">&times;</span>
+            <h2>All Members</h2>
+            <div id="membersList" style="max-height: 400px; overflow-y: auto;">
+                <!-- Members will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Member Modal -->
+    <div id="editMemberModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeEditMemberModalBtn">&times;</span>
+        <h2>Edit Member</h2>
+        <form id="editMemberForm">
+          <input type="hidden" id="editMemberId">
+          <div class="form-group">
+            <label for="editMemberName">Full Name:</label>
+            <input type="text" id="editMemberName" required>
+          </div>
+          <div class="form-group">
+            <label for="editMemberEmail">Email:</label>
+            <input type="email" id="editMemberEmail">
+          </div>
+          <div class="form-group">
+            <label for="editMemberPhone">Phone:</label>
+            <input type="tel" id="editMemberPhone">
+          </div>
+          <div class="form-group">
+            <label for="editMemberSince">Member Since:</label>
+            <input type="date" id="editMemberSince">
+          </div>
+          <button type="submit" class="btn btn-success">Save Changes</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Use CDN for QRCode library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="admin_dashboard.js"></script>
+</body>
+</html> 

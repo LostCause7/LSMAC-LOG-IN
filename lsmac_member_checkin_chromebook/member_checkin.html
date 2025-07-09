@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMAC Member Check-In</title>
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #181A1B;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #23272A;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #181A1B;
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+            color: #0074D9;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .camera-section, .member-section, .search-section, .history-section {
+            background: #23272A;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #181A1B;
+        }
+
+        .camera-container {
+            width: 100%;
+            height: 300px;
+            background: #181A1B;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90%;
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            animation: scanPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { box-shadow: 0 0 10px #00ff00; }
+            50% { box-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #0074D9;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #005fa3;
+        }
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-danger {
+            background: #FF4136;
+            color: #fff;
+            border: 2px solid #FF4136;
+        }
+        .btn-danger:hover {
+            background: #b82a1c;
+            border-color: #FF4136;
+        }
+        .btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .member-section {
+            border-left: 4px solid #FF4136;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .member-info, .history-item {
+            background: #181A1B;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #23272A;
+            min-height: 200px;
+        }
+
+        .member-info h3 {
+            color: #0074D9 !important;
+            font-weight: bold !important;
+            border-bottom: 2px solid #FF4136;
+            padding-bottom: 4px;
+        }
+
+        .member-info-label, .member-section h3 {
+            color: #0074D9 !important;
+            font-weight: bold !important;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #0074D9;
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .checkin-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .checkin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .checkin-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 1px solid #0074D9;
+        }
+        .status.success {
+            background: #23272A;
+            border-color: #28a745;
+            color: #28a745;
+        }
+        .status.error {
+            background: #23272A;
+            border-color: #FF4136;
+            color: #FF4136;
+        }
+        .status.warning {
+            background: #23272A;
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #FF4136;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #23272A;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .camera-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>Member Check-In</h1>
+            <p>Scan your barcode or search for your membership</p>
+        </div>
+
+        <div class="main-content">
+            <div class="camera-section">
+                <h3>Barcode Scanner</h3>
+                <div class="camera-container">
+                    <video id="video" autoplay muted></video>
+                    <div class="camera-overlay"></div>
+                </div>
+                <div class="camera-controls">
+                    <button id="startCamera" class="btn btn-primary" onclick="startScan()">Start Scan</button>
+                    <button id="stopCamera" class="btn btn-danger" onclick="stopScan()" disabled>Stop Scan</button>
+                </div>
+                <div id="cameraStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <div class="member-section">
+                <h3>Member Information</h3>
+                <div id="memberInfo" class="member-info">
+                    <h3>No Member Selected</h3>
+                    <p style="text-align: center; color: #6c757d; margin-top: 50px;">
+                        Scan a barcode to begin check-in
+                    </p>
+                </div>
+                <button id="checkinBtn" class="checkin-btn" onclick="checkInMember()" disabled>
+                    CHECK IN MEMBER
+                </button>
+                <div id="checkinStatus" class="status" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase config
+        const SUPABASE_URL = 'https://xbqunvlxqvpmacjcrasc.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhicXVudmx4cXZwbWFjamNyYXNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMjQ0MjUsImV4cCI6MjA2NzYwMDQyNX0.DcGWWatFg2faO6g7iBEiyjKb4pxlKwHrya005nZ4Pns';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Global variables
+        let stream = null;
+        let scanning = false;
+        let codeReader = null;
+        let currentMember = null;
+        let memberDatabase = {};
+        let checkinHistory = {};
+        const today = new Date().toISOString().split('T')[0];
+        const CENTRAL_TZ = 'America/Chicago';
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadMembersFromSupabase();
+            initializeCodeReader();
+        });
+
+        // Initialize barcode reader
+        function initializeCodeReader() {
+            try {
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                console.log('Barcode reader initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize barcode reader:', error);
+                showNotification('Barcode reader initialization failed', 'error');
+            }
+        }
+
+        // Fetch all members from Supabase
+        async function loadMembersFromSupabase() {
+            try {
+                const { data, error } = await supabase
+                    .from('members')
+                    .select('member_id, name, email, phone, member_since');
+                if (error) {
+                    showNotification('Error loading members from cloud', 'error');
+                    return;
+                }
+                memberDatabase = {};
+                data.forEach(member => {
+                    memberDatabase[member.member_id] = {
+                        id: member.member_id,
+                        name: member.name,
+                        email: member.email,
+                        phone: member.phone,
+                        memberSince: member.member_since
+                    };
+                });
+                console.log('Loaded members from Supabase:', memberDatabase);
+            } catch (err) {
+                showNotification('Error loading members from cloud', 'error');
+            }
+        }
+
+        // Start camera
+        async function startScan() {
+            try {
+                const video = document.getElementById('video');
+                
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                video.srcObject = stream;
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('stopCamera').disabled = false;
+                
+                updateStatus('cameraStatus', 'Camera started successfully', 'success');
+                showNotification('Camera started', 'success');
+                // Start scanning immediately
+                if (!codeReader) initializeCodeReader();
+                scanning = true;
+                await codeReader.decodeFromVideoDevice(null, 'video', (result, error) => {
+                    if (result) {
+                        const barcodeData = result.text;
+                        console.log('Barcode detected:', barcodeData);
+                        processMemberScan(barcodeData);
+                        stopScan();
+                    }
+                });
+            } catch (error) {
+                console.error('Error starting scan:', error);
+                updateStatus('cameraStatus', 'Failed to start scan: ' + error.message, 'error');
+                showNotification('Camera access denied', 'error');
+            }
+        }
+
+        // Stop camera
+        function stopScan() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            const video = document.getElementById('video');
+            video.srcObject = null;
+            
+            document.getElementById('startCamera').disabled = false;
+            document.getElementById('stopCamera').disabled = true;
+            
+            if (codeReader) codeReader.reset();
+            scanning = false;
+            
+            updateStatus('cameraStatus', 'Scan stopped', 'warning');
+        }
+
+        // Process member scan
+        function processMemberScan(memberId) {
+            const member = memberDatabase[memberId];
+            if (!member) {
+                updateStatus('checkinStatus', 'Member not found in database', 'error');
+                showNotification('Member not found', 'error');
+                return;
+            }
+
+            currentMember = member;
+            displayMemberInfo(member);
+            
+            // Check in immediately
+            checkInMember();
+        }
+
+        // Update displayMemberInfo to be async and check today's check-in status
+        async function displayMemberInfo(member, classesTodayOverride) {
+            const memberInfo = document.getElementById('memberInfo');
+            const checkinBtn = document.getElementById('checkinBtn');
+            const todayCentral = luxon.DateTime.now().setZone(CENTRAL_TZ).toISODate();
+            // Query for today's check-in
+            const { data: todayCheckins, error } = await supabase
+                .from('checkins')
+                .select('id')
+                .eq('member_id', member.id)
+                .eq('checkin_date', todayCentral);
+            let statusText;
+            if (todayCheckins && todayCheckins.length > 0) {
+                statusText = '<span style="color:#dc3545;">Already Checked In</span>';
+                checkinBtn.disabled = true;
+            } else {
+                statusText = '<span style="color:#28a745;">Ready for Check-in</span>';
+                checkinBtn.disabled = false;
+            }
+            let classesToday = classesTodayOverride;
+            if (classesToday === undefined && member.classes !== undefined) {
+                classesToday = member.classes;
+            }
+            memberInfo.innerHTML = `
+                <h3>${member.name}</h3>
+                <div class="info-row">
+                    <span class="info-label">Member ID:</span>
+                    <span class="info-value">${member.id}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${member.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value">${member.phone}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Member Since:</span>
+                    <span class="info-value">${member.memberSince}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Classes Today:</span>
+                    <span class="info-value">${classesToday || 0}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">${statusText}</span>
+                </div>
+            `;
+        }
+
+        // Check in member
+        async function checkInMember() {
+            if (!currentMember) {
+                showNotification('No member selected', 'error');
+                return;
+            }
+            // Get today in Central Time (YYYY-MM-DD)
+            const todayCentral = luxon.DateTime.now().setZone(CENTRAL_TZ).toISODate();
+            // Fetch today's check-ins for this member
+            const { data: todayCheckins, error: fetchError } = await supabase
+                .from('checkins')
+                .select('id')
+                .eq('member_id', currentMember.id)
+                .eq('checkin_date', todayCentral);
+            if (fetchError) {
+                showNotification('Error checking member status', 'error');
+                return;
+            }
+            let classesToday = todayCheckins ? todayCheckins.length : 0;
+            if (classesToday > 0) {
+                showNotification('Member already checked in today', 'warning');
+                return;
+            }
+            // Insert into checkins table (date only)
+            const { error: insertError } = await supabase
+                .from('checkins')
+                .insert([
+                    {
+                        member_id: currentMember.id,
+                        checkin_date: todayCentral
+                    }
+                ]);
+            if (insertError) {
+                showNotification('Error recording check-in', 'error');
+                return;
+            }
+            // Update classes column in members table
+            const { error: updateError } = await supabase
+                .from('members')
+                .update({
+                    classes: classesToday + 1
+                })
+                .eq('member_id', currentMember.id);
+            if (updateError) {
+                showNotification('Error updating classes count', 'error');
+                return;
+            }
+            // Update display
+            await displayMemberInfo(currentMember, classesToday + 1);
+            document.getElementById('checkinBtn').disabled = true;
+            updateStatus('checkinStatus', `${currentMember.name} checked in successfully!`, 'success');
+            showNotification('Check-in successful!', 'success');
+            const checkinBtn = document.getElementById('checkinBtn');
+            checkinBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            checkinBtn.textContent = 'CHECKED IN!';
+            setTimeout(() => {
+                checkinBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                checkinBtn.textContent = 'CHECK IN MEMBER';
+            }, 2000);
+        }
+
+        // Update status display
+        function updateStatus(elementId, message, type = 'success') {
+            const statusElement = document.getElementById(elementId);
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

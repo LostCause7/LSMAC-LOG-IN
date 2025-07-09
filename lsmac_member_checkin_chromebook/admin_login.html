@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMAC Admin Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #181A1B;
+            color: #fff;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            background: #23272A;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 30px;
+            border-left: 4px solid #FF4136;
+        }
+
+        .header {
+            background: #181A1B;
+            color: #fff;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #0074D9;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #FF4136;
+            display: inline-block;
+        }
+
+        .header p {
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #0074D9;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #005fa3;
+        }
+        .btn-danger {
+            background: #FF4136;
+            color: #fff;
+            border: 2px solid #FF4136;
+        }
+        .btn-danger:hover {
+            background: #b82a1c;
+            border-color: #FF4136;
+        }
+        .status {
+            background: #23272A;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .demo-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #0066cc;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← Back</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Admin Login</h1>
+            <p>LSMAC Check-In System</p>
+        </div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="pin">PIN</label>
+                <input type="password" id="pin" name="pin" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <a href="#" id="changePinLink">Change PIN</a>
+
+        <!-- Change PIN Modal -->
+        <div id="changePinModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+          <div style="background:#fff; padding:2em; border-radius:8px; max-width:350px; margin:auto;">
+            <h3>Change PIN</h3>
+            <form id="changePinForm">
+              <label for="ownerUsername">Owner Username</label>
+              <input type="text" id="ownerUsername" required><br>
+              <label for="ownerPassword">Owner Password</label>
+              <input type="password" id="ownerPassword" required><br>
+              <label for="newPin">New PIN</label>
+              <input type="password" id="newPin" required><br>
+              <button type="submit">Set New PIN</button>
+              <button type="button" id="cancelChangePin">Cancel</button>
+              <div id="changePinError" style="color:red;"></div>
+            </form>
+          </div>
+        </div>
+    </div>
+
+    <script>
+const SUPABASE_URL = "https://xbqunvlxqvpmacjcrasc.supabase.co";
+const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhicXVudmx4cXZwbWFjamNyYXNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMjQ0MjUsImV4cCI6MjA2NzYwMDQyNX0.DcGWWatFg2faO6g7iBEiyjKb4pxlKwHrya005nZ4Pns";
+const headers = {
+  "apikey": API_KEY,
+  "Authorization": `Bearer ${API_KEY}`,
+  "Content-Type": "application/json"
+};
+
+async function fetchAdmin() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/admin?select=*`, { headers });
+  const data = await res.json();
+  return data[0];
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const pin = document.getElementById('pin').value;
+  const errorMessage = document.getElementById('errorMessage');
+  const admin = await fetchAdmin();
+  if (admin && pin === admin.pin) {
+    sessionStorage.setItem('adminSession', 'true');
+    window.location.href = 'admin_dashboard.html';
+  } else {
+    errorMessage.textContent = 'Invalid PIN';
+    errorMessage.style.display = 'block';
+    setTimeout(() => { errorMessage.style.display = 'none'; }, 3000);
+  }
+}
+
+document.getElementById('loginForm').onsubmit = handleLogin;
+
+document.addEventListener('DOMContentLoaded', async function() {
+  if (sessionStorage.getItem('adminSession') === 'true') {
+    window.location.href = 'admin_dashboard.html';
+  }
+});
+
+// Change PIN modal logic
+const changePinLink = document.getElementById('changePinLink');
+const changePinModal = document.getElementById('changePinModal');
+const cancelChangePin = document.getElementById('cancelChangePin');
+const changePinForm = document.getElementById('changePinForm');
+const changePinError = document.getElementById('changePinError');
+
+changePinLink.onclick = function() {
+  changePinModal.style.display = 'flex';
+};
+cancelChangePin.onclick = function() {
+  changePinModal.style.display = 'none';
+  changePinError.textContent = '';
+};
+changePinForm.onsubmit = async function(e) {
+  e.preventDefault();
+  const username = document.getElementById('ownerUsername').value.trim();
+  const password = document.getElementById('ownerPassword').value;
+  const newPin = document.getElementById('newPin').value;
+  const admin = await fetchAdmin();
+  if (admin && username === admin.username && password === admin.password) {
+    // Update PIN in Supabase
+    await fetch(`${SUPABASE_URL}/rest/v1/admin?id=eq.${admin.id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ pin: newPin })
+    });
+    changePinModal.style.display = 'none';
+    changePinError.textContent = '';
+    alert('PIN changed successfully!');
+  } else {
+    changePinError.textContent = 'Invalid owner credentials.';
+  }
+};
+</script>
+</body>
+</html> 

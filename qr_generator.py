@@ -56,10 +56,15 @@ class QRCodeGenerator:
         self.root.geometry("950x700")
         self.root.configure(bg="#181A1B")  # dark background
         try:
+            # App icon (window/taskbar): LOGO4.png
+            self.icon_img = Image.open("LOGO4.png")
+            self.icon_img = self.icon_img.resize((60, 60), Image.LANCZOS)
+            self.icon_tk = ImageTk.PhotoImage(self.icon_img)
+            self.root.iconphoto(True, self.icon_tk)
+            # Centered logo: LOGO3.png
             self.logo_img = Image.open("LOGO3.png")
             self.logo_img = self.logo_img.resize((60, 60), Image.LANCZOS)
             self.logo_tk = ImageTk.PhotoImage(self.logo_img)
-            self.root.iconphoto(True, self.logo_tk)
         except Exception:
             self.logo_tk = None
         # QR code variables
