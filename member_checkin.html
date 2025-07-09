@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMAC Member Check-In</title>
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .camera-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .camera-container {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 100px;
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            animation: scanPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { box-shadow: 0 0 10px #00ff00; }
+            50% { box-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .member-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .member-info {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            min-height: 200px;
+        }
+
+        .member-info h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .info-value {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .checkin-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .checkin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .checkin-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 1px solid;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .camera-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>Member Check-In</h1>
+            <p>Scan your barcode or search for your membership</p>
+        </div>
+
+        <div class="main-content">
+            <div class="camera-section">
+                <h3>Barcode Scanner</h3>
+                <div class="camera-container">
+                    <video id="video" autoplay muted></video>
+                    <div class="camera-overlay"></div>
+                </div>
+                <div class="camera-controls">
+                    <button id="startCamera" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
+                    <button id="stopCamera" class="btn btn-danger" onclick="stopCamera()" disabled>Stop Camera</button>
+                    <button id="startScanning" class="btn btn-success" onclick="startScanning()" disabled>Start Scanning</button>
+                </div>
+                <div id="cameraStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <div class="member-section">
+                <h3>Member Information</h3>
+                <div id="memberInfo" class="member-info">
+                    <h3>No Member Selected</h3>
+                    <p style="text-align: center; color: #6c757d; margin-top: 50px;">
+                        Scan a barcode to begin check-in
+                    </p>
+                </div>
+                <button id="checkinBtn" class="checkin-btn" onclick="checkInMember()" disabled>
+                    CHECK IN MEMBER
+                </button>
+                <div id="checkinStatus" class="status" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let stream = null;
+        let scanning = false;
+        let codeReader = null;
+        let currentMember = null;
+        let memberDatabase = {};
+        let checkinHistory = {};
+        const today = new Date().toISOString().split('T')[0];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initializeCodeReader();
+        });
+
+        // Initialize barcode reader
+        function initializeCodeReader() {
+            try {
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                console.log('Barcode reader initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize barcode reader:', error);
+                showNotification('Barcode reader initialization failed', 'error');
+            }
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            try {
+                const savedMembers = localStorage.getItem('lsmac_members');
+                const savedHistory = localStorage.getItem('lsmac_history');
+                
+                if (savedMembers) {
+                    memberDatabase = JSON.parse(savedMembers);
+                }
+
+                if (savedHistory) {
+                    checkinHistory = JSON.parse(savedHistory);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('Error loading data', 'error');
+            }
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                const video = document.getElementById('video');
+                
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                video.srcObject = stream;
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('stopCamera').disabled = false;
+                document.getElementById('startScanning').disabled = false;
+                
+                updateStatus('cameraStatus', 'Camera started successfully', 'success');
+                showNotification('Camera started', 'success');
+            } catch (error) {
+                console.error('Error starting camera:', error);
+                updateStatus('cameraStatus', 'Failed to start camera: ' + error.message, 'error');
+                showNotification('Camera access denied', 'error');
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            const video = document.getElementById('video');
+            video.srcObject = null;
+            
+            document.getElementById('startCamera').disabled = false;
+            document.getElementById('stopCamera').disabled = true;
+            document.getElementById('startScanning').disabled = true;
+            
+            if (scanning) {
+                stopScanning();
+            }
+            
+            updateStatus('cameraStatus', 'Camera stopped', 'warning');
+        }
+
+        // Start barcode scanning
+        async function startScanning() {
+            if (!codeReader || !stream) {
+                showNotification('Camera not ready', 'error');
+                return;
+            }
+
+            try {
+                scanning = true;
+                document.getElementById('startScanning').textContent = 'Stop Scanning';
+                document.getElementById('startScanning').onclick = stopScanning;
+                
+                updateStatus('cameraStatus', 'Scanning for barcodes...', 'success');
+                
+                // Start continuous scanning
+                await codeReader.decodeFromVideoDevice(null, 'video', (result, error) => {
+                    if (result) {
+                        const barcodeData = result.text;
+                        console.log('Barcode detected:', barcodeData);
+                        processMemberScan(barcodeData);
+                        stopScanning();
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error starting scanning:', error);
+                updateStatus('cameraStatus', 'Failed to start scanning: ' + error.message, 'error');
+                stopScanning();
+            }
+        }
+
+        // Stop scanning
+        function stopScanning() {
+            if (codeReader) {
+                codeReader.reset();
+            }
+            
+            scanning = false;
+            document.getElementById('startScanning').textContent = 'Start Scanning';
+            document.getElementById('startScanning').onclick = startScanning;
+            
+            updateStatus('cameraStatus', 'Scanning stopped', 'warning');
+        }
+
+        // Process member scan
+        function processMemberScan(memberId) {
+            const member = memberDatabase[memberId];
+            if (!member) {
+                updateStatus('checkinStatus', 'Member not found in database', 'error');
+                showNotification('Member not found', 'error');
+                return;
+            }
+
+            currentMember = member;
+            displayMemberInfo(member);
+            
+            // Check if already checked in today
+            if (checkinHistory[memberId] && checkinHistory[memberId].includes(today)) {
+                updateStatus('checkinStatus', `${member.name} has already checked in today`, 'warning');
+                showNotification('Already checked in today', 'warning');
+                document.getElementById('checkinBtn').disabled = true;
+            } else {
+                document.getElementById('checkinBtn').disabled = false;
+                updateStatus('checkinStatus', `${member.name} ready for check-in`, 'success');
+                showNotification('Member identified', 'success');
+            }
+        }
+
+        // Display member information
+        function displayMemberInfo(member) {
+            const memberInfo = document.getElementById('memberInfo');
+            const hasCheckedIn = checkinHistory[member.id] && checkinHistory[member.id].includes(today);
+            
+            memberInfo.innerHTML = `
+                <h3>${member.name}</h3>
+                <div class="info-row">
+                    <span class="info-label">Member ID:</span>
+                    <span class="info-value">${member.id}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${member.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value">${member.phone}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Member Since:</span>
+                    <span class="info-value">${member.memberSince}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value" style="color: ${hasCheckedIn ? '#dc3545' : '#28a745'}">
+                        ${hasCheckedIn ? 'Already Checked In' : 'Ready for Check-in'}
+                    </span>
+                </div>
+            `;
+        }
+
+        // Check in member
+        function checkInMember() {
+            if (!currentMember) {
+                showNotification('No member selected', 'error');
+                return;
+            }
+
+            if (checkinHistory[currentMember.id] && checkinHistory[currentMember.id].includes(today)) {
+                showNotification('Member already checked in today', 'warning');
+                return;
+            }
+
+            // Record check-in
+            if (!checkinHistory[currentMember.id]) {
+                checkinHistory[currentMember.id] = [];
+            }
+            checkinHistory[currentMember.id].push(today);
+
+            // Save data
+            localStorage.setItem('lsmac_history', JSON.stringify(checkinHistory));
+
+            // Update display
+            displayMemberInfo(currentMember);
+            document.getElementById('checkinBtn').disabled = true;
+
+            // Show success message
+            updateStatus('checkinStatus', `${currentMember.name} checked in successfully!`, 'success');
+            showNotification('Check-in successful!', 'success');
+
+            // Add visual feedback
+            const checkinBtn = document.getElementById('checkinBtn');
+            checkinBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            checkinBtn.textContent = 'CHECKED IN!';
+            
+            setTimeout(() => {
+                checkinBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                checkinBtn.textContent = 'CHECK IN MEMBER';
+            }, 2000);
+        }
+
+        // Update status display
+        function updateStatus(elementId, message, type) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html> 
