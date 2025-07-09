@@ -1,21 +1,18 @@
 # LSMAC Member Check-In System
 
-A comprehensive barcode scanning check-in system for managing member attendance with local database storage, camera integration, and QR code generation capabilities. Now includes a **futuristic web-based interface** with animated designs and modern UI.
+A comprehensive barcode scanning check-in system for managing member attendance with local database storage, camera integration, and QR code generation capabilities. Features a modern desktop interface with member management and QR code generation.
 
-## 🌟 New: Web-Based Check-In System
+## 🌟 LSMAC Check-In System
 
-Experience the future of member check-in with our new **futuristic HTML interface** featuring:
-- **Animated Design**: Glowing effects, floating particles, and smooth animations
-- **Modern UI**: Sleek, sci-fi inspired interface with gradient backgrounds
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Real-time Camera**: Direct browser camera access for barcode scanning
-- **Interactive Elements**: Hover effects, button animations, and visual feedback
-- **No Installation Required**: Runs directly in any modern web browser
-
-### Quick Web Access
-- **Windows**: Double-click `launch_web_checkin.bat` or open `web_checkin.html` in your browser
-- **All Platforms**: Open `web_checkin.html` directly in any web browser
-- **Features**: Camera integration, member database, check-in tracking, and animated notifications
+Experience the future of member check-in with our **comprehensive check-in system** featuring:
+- **Barcode Scanning**: Real-time barcode detection using your system's camera
+- **QR Code Generation**: Create QR codes for member IDs with customizable options
+- **Member Management**: Add, edit, remove, and manage member information
+- **Check-in Tracking**: Record daily check-ins with timestamps
+- **Local Database**: SQLite database for reliable local data storage
+- **Modern GUI**: Clean, intuitive interface built with tkinter
+- **History Tracking**: View individual member check-in history
+- **Duplicate Prevention**: Prevents multiple check-ins on the same day
 
 ## Features
 
@@ -53,14 +50,14 @@ Experience the future of member check-in with our new **futuristic HTML interfac
 
 ## Quick Start
 
-### 🌐 Web-Based Interface (Recommended)
-1. **Windows**: Double-click `launch_web_checkin.bat`
-2. **All Platforms**: Open `web_checkin.html` in your web browser
+### 🖥️ Desktop Check-In System (Recommended)
+1. **Windows**: Double-click `launcher.py` or run `python launcher.py`
+2. **All Platforms**: Run `python main.py` for the check-in system
 3. **Features**: 
    - Click "Start Camera" to access your device camera
    - Click "Start Scanning" to begin barcode detection
    - View member information and complete check-ins
-   - Enjoy the futuristic animated interface
+   - Manage members and generate QR codes
 
 ### Using the Launcher (Desktop Applications)
 1. Run `python launcher.py`
@@ -163,8 +160,6 @@ The system supports all major barcode formats:
 
 ```
 LSMAC-LOG-IN/
-├── web_checkin.html         # 🌟 Futuristic web-based check-in interface
-├── launch_web_checkin.bat   # Windows launcher for web interface
 ├── launcher.py              # Main system launcher
 ├── main.py                  # Check-in system entry point
 ├── qr_generator.py          # QR code generator & member management

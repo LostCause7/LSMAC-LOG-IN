@@ -4,6 +4,26 @@ from pyzbar import pyzbar
 from typing import Optional, Tuple
 import threading
 import time
+import requests
+
+SUPABASE_URL = "https://xbqunvlxqvpmacjcrasc.supabase.co"
+API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhicXVudmx4cXZwbWFjamNyYXNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMjQ0MjUsImV4cCI6MjA2NzYwMDQyNX0.DcGWWatFg2faO6g7iBEiyjKb4pxlKwHrya005nZ4Pns"
+headers = {
+    "apikey": API_KEY,
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
+
+def check_in_member(member_id):
+    # Check if member exists
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/members?member_id=eq.{member_id}", headers=headers)
+    if r.status_code == 200 and r.json():
+        # Update checked_in to true
+        update = requests.patch(f"{SUPABASE_URL}/rest/v1/members?member_id=eq.{member_id}", headers=headers, json={"checked_in": True})
+        return update.status_code == 204
+    else:
+        print("Member not found in Supabase.")
+        return False
 
 class BarcodeScanner:
     def __init__(self, camera_index: int = 0):

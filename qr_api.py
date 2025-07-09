@@ -28,5 +28,9 @@ def generate_qr():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
+@app.route("/")
+def home():
+    return "LSMAC QR Code API is running!"
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000) 
