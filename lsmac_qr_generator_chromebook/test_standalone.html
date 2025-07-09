@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMAC QR Generator - Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0074D9 0%, #005fa3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0074D9;
+        }
+
+        .info-box h2 {
+            color: #0074D9;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #0074D9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #005fa3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #2ECC40;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .steps {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .steps ol {
+            margin-left: 20px;
+        }
+
+        .steps li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: #f1f3f4;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border-left: 4px solid #0074D9;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LSMAC QR Generator</h1>
+            <p>Chrome OS Compatible Version</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h2>⚠️ CORS Error Detected</h2>
+                <p>You're trying to open the HTML file directly in the browser, which causes CORS (Cross-Origin Resource Sharing) errors. The web app needs to run through a web server to work properly.</p>
+            </div>
+
+            <div class="steps">
+                <h2>How to Fix This:</h2>
+                <ol>
+                    <li><strong>Option 1: Use the Desktop App (Recommended)</strong>
+                        <div class="code-block">
+                            python3 qr_generator_chromebook.py
+                        </div>
+                    </li>
+                    
+                    <li><strong>Option 2: Run the Web Server</strong>
+                        <div class="code-block">
+                            python3 web_qr_generator.py
+                        </div>
+                        Then open: <a href="http://localhost:5000" target="_blank">http://localhost:5000</a>
+                    </li>
+                    
+                    <li><strong>Option 3: Use the Launcher Script</strong>
+                        <div class="code-block">
+                            python3 run_web_app.py
+                        </div>
+                    </li>
+                    
+                    <li><strong>Option 4: Windows Users</strong>
+                        <div class="code-block">
+                            run_web_app.bat
+                        </div>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="warning">
+                <strong>Note:</strong> The web app requires a web server to handle API requests. Opening HTML files directly in the browser won't work due to browser security restrictions.
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="#" onclick="showSetupInstructions()" class="btn">Show Setup Instructions</a>
+                <a href="#" onclick="showTroubleshooting()" class="btn btn-success">Troubleshooting</a>
+            </div>
+
+            <div id="setupInstructions" style="display: none; margin-top: 20px;">
+                <div class="info-box">
+                    <h2>Setup Instructions for Chrome OS:</h2>
+                    <ol>
+                        <li>Enable Linux on your Chromebook (Settings → Advanced → Developers)</li>
+                        <li>Open Terminal (Ctrl + Alt + T, then type 'shell')</li>
+                        <li>Install Python: <code>sudo apt install python3 python3-pip</code></li>
+                        <li>Install dependencies: <code>pip3 install flask qrcode[pil] requests</code></li>
+                        <li>Run the app: <code>python3 qr_generator_chromebook.py</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="troubleshooting" style="display: none; margin-top: 20px;">
+                <div class="info-box">
+                    <h2>Common Issues:</h2>
+                    <ul>
+                        <li><strong>Python not found:</strong> Use <code>python3</code> instead of <code>python</code></li>
+                        <li><strong>Module not found:</strong> Install dependencies with <code>pip3 install -r requirements.txt</code></li>
+                        <li><strong>Permission denied:</strong> Make script executable: <code>chmod +x qr_generator_chromebook.py</code></li>
+                        <li><strong>Port already in use:</strong> Change port in web_qr_generator.py or kill existing process</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSetupInstructions() {
+            document.getElementById('setupInstructions').style.display = 'block';
+            document.getElementById('troubleshooting').style.display = 'none';
+        }
+
+        function showTroubleshooting() {
+            document.getElementById('troubleshooting').style.display = 'block';
+            document.getElementById('setupInstructions').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 

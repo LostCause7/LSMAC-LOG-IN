@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMAC QR Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0074D9 0%, #005fa3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #0074D9;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #0074D9;
+            padding-bottom: 10px;
+        }
+
+        .btn {
+            background: #0074D9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #005fa3;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #FF4136;
+        }
+
+        .btn-danger:hover {
+            background: #b82a1c;
+        }
+
+        .btn-success {
+            background: #2ECC40;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #0074D9;
+        }
+
+        .member-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .member-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .member-item:hover {
+            background: #e3f2fd;
+        }
+
+        .member-item.selected {
+            background: #0074D9;
+            color: white;
+        }
+
+        .member-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .member-details {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .qr-display {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .qr-image {
+            max-width: 300px;
+            max-height: 300px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .qr-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .option-group select {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0074D9;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LSMAC QR Code Generator</h1>
+            <p>Generate QR codes for your members</p>
+        </div>
+
+        <div class="content">
+            <!-- Left Panel - Member Management -->
+            <div class="panel">
+                <h2>Member Management</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showAddMemberModal()">Add Member</button>
+                    <button class="btn" onclick="showEditMemberModal()">Edit Member</button>
+                    <button class="btn btn-danger" onclick="deleteSelectedMember()">Delete Member</button>
+                </div>
+
+                <input type="text" class="search-box" id="searchBox" placeholder="Search members..." onkeyup="filterMembers()">
+
+                <div class="member-list" id="memberList">
+                    <!-- Members will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Right Panel - QR Code -->
+            <div class="panel">
+                <h2>QR Code Generator</h2>
+                
+                <div class="qr-display" id="qrDisplay">
+                    <p style="color: #666; font-size: 16px;">Select a member to generate QR code</p>
+                </div>
+
+                <div class="qr-options">
+                    <div class="option-group">
+                        <label for="qrSize">QR Size:</label>
+                        <select id="qrSize">
+                            <option value="5">Small</option>
+                            <option value="8">Medium</option>
+                            <option value="10" selected>Large</option>
+                            <option value="12">Extra Large</option>
+                            <option value="15">Huge</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label for="qrBorder">Border:</label>
+                        <select id="qrBorder">
+                            <option value="2">Thin</option>
+                            <option value="4" selected>Normal</option>
+                            <option value="6">Thick</option>
+                            <option value="8">Extra Thick</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="btn btn-success" onclick="generateQR()">Generate QR Code</button>
+                    <button class="btn" onclick="downloadQR()">Download QR Code</button>
+                    <button class="btn" onclick="printQR()">Print QR Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div id="addMemberModal" class="modal">
+        <div class="modal-content">
+            <h2>Add New Member</h2>
+            <form id="addMemberForm">
+                <div class="form-group">
+                    <label for="addMemberId">Member ID:</label>
+                    <input type="text" id="addMemberId" required>
+                </div>
+                <div class="form-group">
+                    <label for="addMemberName">Name:</label>
+                    <input type="text" id="addMemberName" required>
+                </div>
+                <div class="form-group">
+                    <label for="addMemberEmail">Email:</label>
+                    <input type="email" id="addMemberEmail">
+                </div>
+                <div class="form-group">
+                    <label for="addMemberPhone">Phone:</label>
+                    <input type="tel" id="addMemberPhone">
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Add Member</button>
+                    <button type="button" class="btn" onclick="closeModal('addMemberModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Member Modal -->
+    <div id="editMemberModal" class="modal">
+        <div class="modal-content">
+            <h2>Edit Member</h2>
+            <form id="editMemberForm">
+                <div class="form-group">
+                    <label for="editMemberId">Member ID:</label>
+                    <input type="text" id="editMemberId" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editMemberName">Name:</label>
+                    <input type="text" id="editMemberName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editMemberEmail">Email:</label>
+                    <input type="email" id="editMemberEmail">
+                </div>
+                <div class="form-group">
+                    <label for="editMemberPhone">Phone:</label>
+                    <input type="tel" id="editMemberPhone">
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Update Member</button>
+                    <button type="button" class="btn" onclick="closeModal('editMemberModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let members = [];
+        let selectedMember = null;
+        let currentQRCode = null;
+
+        // Load members on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMembers();
+        });
+
+        async function loadMembers() {
+            try {
+                const response = await fetch('/api/members');
+                members = await response.json();
+                displayMembers();
+                showStatus('Members loaded successfully', 'success');
+            } catch (error) {
+                showStatus('Error loading members: ' + error.message, 'error');
+            }
+        }
+
+        function displayMembers() {
+            const memberList = document.getElementById('memberList');
+            memberList.innerHTML = '';
+            
+            members.forEach(member => {
+                const memberDiv = document.createElement('div');
+                memberDiv.className = 'member-item';
+                memberDiv.onclick = () => selectMember(member);
+                
+                memberDiv.innerHTML = `
+                    <div class="member-name">${member.name}</div>
+                    <div class="member-details">
+                        ID: ${member.member_id} | Email: ${member.email || 'N/A'}
+                    </div>
+                `;
+                
+                memberList.appendChild(memberDiv);
+            });
+        }
+
+        function filterMembers() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const memberItems = document.querySelectorAll('.member-item');
+            
+            memberItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        function selectMember(member) {
+            // Remove previous selection
+            document.querySelectorAll('.member-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.target.closest('.member-item').classList.add('selected');
+            
+            selectedMember = member;
+            showStatus(`Selected: ${member.name}`, 'success');
+        }
+
+        async function generateQR() {
+            if (!selectedMember) {
+                showStatus('Please select a member first', 'error');
+                return;
+            }
+
+            const size = document.getElementById('qrSize').value;
+            const border = document.getElementById('qrBorder').value;
+
+            try {
+                const response = await fetch(`/api/qr/${selectedMember.member_id}?size=${size}&border=${border}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const qrDisplay = document.getElementById('qrDisplay');
+                    qrDisplay.innerHTML = `<img src="${data.qr_code}" alt="QR Code" class="qr-image">`;
+                    currentQRCode = data.qr_code;
+                    showStatus('QR code generated successfully', 'success');
+                } else {
+                    showStatus('Error generating QR code', 'error');
+                }
+            } catch (error) {
+                showStatus('Error generating QR code: ' + error.message, 'error');
+            }
+        }
+
+        function downloadQR() {
+            if (!currentQRCode) {
+                showStatus('Please generate a QR code first', 'error');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.download = `QR_${selectedMember.member_id}_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = currentQRCode;
+            link.click();
+            showStatus('QR code downloaded', 'success');
+        }
+
+        function printQR() {
+            if (!currentQRCode) {
+                showStatus('Please generate a QR code first', 'error');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head><title>Print QR Code</title></head>
+                    <body style="text-align: center; padding: 20px;">
+                        <h2>QR Code for ${selectedMember.name}</h2>
+                        <img src="${currentQRCode}" style="max-width: 400px;">
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function showAddMemberModal() {
+            document.getElementById('addMemberModal').style.display = 'block';
+        }
+
+        function showEditMemberModal() {
+            if (!selectedMember) {
+                showStatus('Please select a member to edit', 'error');
+                return;
+            }
+
+            document.getElementById('editMemberId').value = selectedMember.member_id;
+            document.getElementById('editMemberName').value = selectedMember.name;
+            document.getElementById('editMemberEmail').value = selectedMember.email || '';
+            document.getElementById('editMemberPhone').value = selectedMember.phone || '';
+            
+            document.getElementById('editMemberModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Form submissions
+        document.getElementById('addMemberForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const memberData = {
+                member_id: document.getElementById('addMemberId').value,
+                name: document.getElementById('addMemberName').value,
+                email: document.getElementById('addMemberEmail').value,
+                phone: document.getElementById('addMemberPhone').value
+            };
+
+            try {
+                const response = await fetch('/api/members', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(memberData)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('Member added successfully', 'success');
+                    closeModal('addMemberModal');
+                    loadMembers();
+                    document.getElementById('addMemberForm').reset();
+                } else {
+                    showStatus('Error adding member: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error adding member: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('editMemberForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const memberData = {
+                name: document.getElementById('editMemberName').value,
+                email: document.getElementById('editMemberEmail').value,
+                phone: document.getElementById('editMemberPhone').value
+            };
+
+            try {
+                const response = await fetch(`/api/members/${selectedMember.member_id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(memberData)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('Member updated successfully', 'success');
+                    closeModal('editMemberModal');
+                    loadMembers();
+                } else {
+                    showStatus('Error updating member: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error updating member: ' + error.message, 'error');
+            }
+        });
+
+        async function deleteSelectedMember() {
+            if (!selectedMember) {
+                showStatus('Please select a member to delete', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ${selectedMember.name}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/members/${selectedMember.member_id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('Member deleted successfully', 'success');
+                    selectedMember = null;
+                    currentQRCode = null;
+                    document.getElementById('qrDisplay').innerHTML = '<p style="color: #666; font-size: 16px;">Select a member to generate QR code</p>';
+                    loadMembers();
+                } else {
+                    showStatus('Error deleting member: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error deleting member: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            // Remove existing status messages
+            const existingStatus = document.querySelector('.status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            const status = document.createElement('div');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            
+            document.querySelector('.container').appendChild(status);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (status.parentNode) {
+                    status.remove();
+                }
+            }, 5000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 
