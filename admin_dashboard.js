@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Generate QR code
     function generateQRCode(memberId) {
-        fetch('http://localhost:5000/generate_qr', {
+        fetch('https://lsmac-log-in.onrender.com/generate_qr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ member_id: memberId })
