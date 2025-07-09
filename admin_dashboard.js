@@ -166,6 +166,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error) {
                 console.error('Error generating QR code:', error);
             }
+        });
+        
         fetch('https://lsmac-log-in.onrender.com/generate_qr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
