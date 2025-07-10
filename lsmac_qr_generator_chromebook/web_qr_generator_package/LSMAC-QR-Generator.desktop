@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LSMAC QR Generator
+Comment=Web-based QR code generation system for member management
+Exec=python3 /home/chronos/user/Downloads/lsmac_qr_generator_chromebook/web_qr_generator_package/launch_chromebook_one_click.py
+Icon=applications-internet
+Terminal=true
+Categories=Office;Network;WebBrowser;
+Keywords=QR;Code;Generator;Member;Management;
+StartupNotify=true
+StartupWMClass=LSMAC-QR-Generator 
